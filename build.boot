@@ -1,7 +1,7 @@
 (set-env!
  :source-paths    #{"src/cljs"}
  :resource-paths  #{"resources"}
- :dependencies '[[adzerk/boot-cljs          "1.7.228-2"  :scope "test"]
+ :dependencies '[[adzerk/boot-cljs          "2.0.0"      :scope "test"]
                  [adzerk/boot-cljs-repl     "0.3.3"      :scope "test"]
                  [adzerk/boot-reload        "0.4.13"     :scope "test"]
                  [pandeiro/boot-http        "0.7.6"      :scope "test"]
@@ -9,7 +9,7 @@
                  [org.clojure/tools.nrepl   "0.2.12"     :scope "test"]
                  [weasel                    "0.7.0"      :scope "test"]
                  [onetom/boot-lein-generate "0.1.3"      :scope "test"]
-                 [quil                      "2.5.0"]
+                 [quil                      "2.6.0"]
                  [org.clojure/core.async    "0.3.441"]
                  [org.clojure/clojure       "1.9.0-alpha14"]
                  [org.clojure/clojurescript "1.9.494"]])
