@@ -88,6 +88,20 @@
         (map (partial apply ->Pixel 0)
              (partition 4 data))))))
 
+(defn square-center-coordinates
+  "given width 10, height 10, square-width 4, square-height 4, returns:
+  ([2 2] [6 2]
+   [2 6] [6 6])
+  "
+  [width height square-width square-height]
+  (for [heights (range (/ square-height 2.0)
+                       height
+                       square-height)
+        widths (range (/ square-width 2.0)
+                      width
+                      square-width)]
+    [widths heights]))
+
 (defn get-image-data-from-element!
   "in order to get information about the image,
   it must be in a canvas element, so put the image into a canvas element
@@ -118,8 +132,15 @@
         image (get-element! "trmp")
         width (.-width image)
         height (.-height image)
-        sqrs (squares pixel-vector width height 20 20)]
+        square-width 20
+        square-height 20
+        sqrs (squares pixel-vector width height square-width square-height)
+        square-averages (map average-pixel-group (take 5 sqrs))
+        square-centers (square-center-coordinates width height square-width square-height)
+        with-locations (interleave square-averages (take 5 square-centers))
+        ]
 
+    (.log js/console (clj->js with-locations))
     (.log js/console (clj->js (take 5 sqrs)))
     (.log js/console (clj->js (map average-pixel-group (take 5 sqrs))))
     (.log js/console "width:" width)
