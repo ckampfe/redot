@@ -43,7 +43,7 @@
 
 (deftask development []
   (task-options! cljs {:optimizations :none :source-map true}
-                 reload {:on-jsload 'halftone.app/init}
+                 reload {:on-jsload 'redot.app/init}
                  )
   identity)
 

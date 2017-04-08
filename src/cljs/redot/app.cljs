@@ -1,4 +1,4 @@
-(ns halftone.app
+(ns redot.app
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :refer [<!]]))
 
