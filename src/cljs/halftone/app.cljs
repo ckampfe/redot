@@ -2,67 +2,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :refer [<!]]))
 
-(def resolution 144)
-
-(defn translate-dimension [dimension resolution]
-  (->> resolution
-       (* 25.4)
-       (/ dimension)
-       int))
-
-(defn max-radius [raster-size resolution]
-  (-> raster-size
-      (/ 25.4)
-      (* resolution)
-      (/ 2)))
-
-(defn raster-color [color-string]
-  (vector (subs color-string 0 2)
-          (subs color-string 2 4)
-          (subs color-string 4 6)))
-
-(defn square-size [max-radius]
-  (* 2.0
-     (/ (- max-radius 1.0)
-        (.sqrt js/Math 2.0))))
-
-(defn squares-per-paper [paper-dimension square-size]
-  (/ paper-dimension square-size))
-
-(defn pages-max [image-dimension paper-dimension]
-  (.ceil js/Math 4))
-
-(defn aspect [original-dimension display-image-dimension]
-  (/ (* 1.0 original-dimension)
-     (display-image-dimension)))
-
-(defn utlization-area [dim1 dim2 aspect]
-  (vector (* dim1 aspect)
-          (* dim2 aspect)))
-
-(defn pages [image-dim paper-dim]
-  (->> paper-dim
-       (/ (* 1.0 image-dim))
-       int))
-
-(defn squares-per-dim [paper-dim square-size]
-  (int (/ paper-dim square-size)))
-
-(defn rasterbate-page [x-page y-page square-size]
-  (let [squares-x (squares-per-paper x-page square-size)
-        squares-y (squares-per-paper y-page square-size)] (for [sy (range -1 (+ 1 squares-y))
-                                                                sx (range -1 (+ 1 squares-x))]
-
-                                                            [sy sx])))
-
-(defn draw-circle [x y psy radius])
-  ;; C.circle(ex, psy-ey, Radius/2)
-
-(defn rasterbate! [pages-x pages-y square-size]
-  (for [x-page pages-x
-        y-page pages-y]
-    (rasterbate-page x-page y-page square-size)))
-
 (defn rows [width pixel-vector]
   (partition width pixel-vector))
 
