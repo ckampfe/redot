@@ -1,6 +1,9 @@
 # redot
 
-=======
+why wouldn't you want to make rasters like:
+
+![](http://i.imgur.com/TqjYCKT.png)
+
 
 in a terminal:
 
