@@ -1,6 +1,19 @@
 (ns redot.app
-  (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [cljs.core.async :refer [<!]]))
+  (:require [quil.core :as q :include-macros true]))
+
+(defn get-element! [el-id]
+  (.getElementById js/document el-id))
+
+(defn create-canvas-element! []
+  (.createElement js/document "canvas"))
+
+(defn get-canvas-context! [canvas]
+  (.getContext canvas "2d"))
+
+(defn radius [brightness sample-size max-radius]
+  (* (- 1
+        (/ brightness sample-size))
+     max-radius))
 
 (defn rows [width pixel-vector]
   (partition width pixel-vector))
@@ -26,17 +39,16 @@
     (mapcat #(apply map concat %)
             row-groups)))
 
-(defn pixel-brightness [{:keys [r g b]}]
+(defn pixel-brightness
+  "this is based on something I found on the internet,
+  unfortunately I've lost the link"
+  [{:keys [r g b]}]
   (+ (* 0.2126 r)
      (* 0.7152 g)
      (* 0.0722 b)))
 
-(defn radius [brightness sample-size max-radius]
-  (* (- 1
-        (/ brightness sample-size))
-     max-radius))
-
 (defprotocol Semigroup
+  "a typeclass for things that can be combined"
   (combine [this that]))
 
 (defrecord Pixel [brightness r g b a]
@@ -66,15 +78,6 @@
                                 (/ old number-of-pixels)))))
             combined-pixel
             [:brightness :r :g :b :a])))
-
-(defn get-element! [el-id]
-  (.getElementById js/document el-id))
-
-(defn create-canvas-element! []
-  (.createElement js/document "canvas"))
-
-(defn get-canvas-context! [canvas]
-  (.getContext canvas "2d"))
 
 (defn bytes->pixels
   "transform an array of bytes into pixels."
@@ -120,29 +123,49 @@
 
     ;; and get the data
     (-> context
-        (.getImageData 0                ;; x coordinate
-                       0                ;; y coordinate
-                       (.-width image)  ;; full width
+        (.getImageData 0                 ;; x coordinate
+                       0                 ;; y coordinate
+                       (.-width image)   ;; full width
                        (.-height image)) ;; full height
         .-data)))
 
-(defn init []
+(defn init
+  "for now, this is the main entrypoint"
+  []
   (let [image-data (get-image-data-from-element! "trmp")
         pixel-vector (bytes->pixels image-data)
         image (get-element! "trmp")
         width (.-width image)
         height (.-height image)
-        square-width 20
-        square-height 20
+        square-width 10
+        square-height 10
         sqrs (squares pixel-vector width height square-width square-height)
-        square-averages (map average-pixel-group (take 5 sqrs))
+        square-averages (map average-pixel-group sqrs)
         square-centers (square-center-coordinates width height square-width square-height)
-        with-locations (interleave square-averages (take 5 square-centers))
-        ]
+        pixels-with-locations (partition 2 (interleave square-averages square-centers))]
 
-    (.log js/console (clj->js with-locations))
-    (.log js/console (clj->js (take 5 sqrs)))
-    (.log js/console (clj->js (map average-pixel-group (take 5 sqrs))))
-    (.log js/console "width:" width)
-    (.log js/console "height:" height)))
-    ;; (.log js/console (clj->js squares))))
+    (.log js/console width)
+    (.log js/console height)
+
+    ;; these still throw typeerrors in the console,
+    ;; not sure why
+    (q/background 255)
+    (q/no-stroke)
+
+    (doseq [[pixel [x y]] pixels-with-locations]
+      (q/with-fill [(:r pixel)
+                    (:g pixel)
+                    (:b pixel)
+                    (:a pixel)]
+        ;; this radius value has an incredible effect
+        ;; on the quality of the resulting drawing
+        ;; TODO: look into have to better the radius
+        (let [r (/ (radius (:brightness pixel) 300 40)
+                   2)]
+          (q/ellipse x y r r))))))
+
+(q/defsketch redot
+  :title "redot"
+  :host "redot"
+  :size [260 250]
+  :setup init)
