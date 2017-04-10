@@ -15,27 +15,64 @@
         (/ brightness sample-size))
      max-radius))
 
-(defn rows [width pixel-vector]
+(defn into-rows [pixel-vector width]
   (partition width pixel-vector))
 
-(defn squares
-  "transforms a pixel vector of:
-  [1  2  3  4  5  6  7  8  9
-   10 11 12 13 14 15 16 17 18
-   19 20 21 22 23 24 25 26 27]
-  into:
-  [[1  2  3  [4  5  6   [7  8  9
-   10 11 12   13 14 15   16 17 18
-   19 20 21]  22 23 24]  25 26 27]]
-  assuming width of 9, height of 3,
-  square-width of 3, and square-height of 3.
-  "
+(defn into-squares
+  "assuming width of 9, height of 6,
+   square-width of 3, and square-height of 3,
+   the progression of data looks like this:
+   initial:
+   (1  2  3  4  5  6  7  8  9
+    10 11 12 13 14 15 16 17 18
+    19 20 21 22 23 24 25 26 27
+    28 29 30 31 32 33 34 35 36
+    37 38 39 40 41 42 43 44 45
+    46 47 48 49 50 51 52 53 54)
+   with rows:
+   ((1  2  3  4  5  6  7  8  9)
+    (10 11 12 13 14 15 16 17 18)
+    (19 20 21 22 23 24 25 26 27)
+    (28 29 30 31 32 33 34 35 36)
+    (37 38 39 40 41 42 43 44 45)
+    (46 47 48 49 50 51 52 53 54))
+   rows partitioned with square-width:
+   (((1  2  3)  (4  5  6)  (7  8  9))
+    ((10 11 12) (13 14 15) (16 17 18))
+    ((19 20 21) (22 23 24) (25 26 27))
+    ((28 29 30) (31 32 33) (34 35 36))
+    ((37 38 39) (40 41 42) (43 44 45))
+    ((46 47 48) (49 50 51) (52 53 54)))
+   rows grouped/partitioned with square-height:
+   (note that rows beginning with (1 2 3), (10 11 12),
+   and (19 20 21) appear in the same collection,
+   reflecting the square-height of 3)
+   ((((1  2  3)  (4  5  6)  (7  8  9))
+     ((10 11 12) (13 14 15) (16 17 18))
+     ((19 20 21) (22 23 24) (25 26 27)))
+    (((28 29 30) (31 32 33) (34 35 36))
+     ((37 38 39) (40 41 42) (43 44 45))
+     ((46 47 48) (49 50 51) (52 53 54))))
+   squares, where each row has been pivoted
+   such that the 1st item of row 1
+   is concatenated with the 1st item of rows
+   2 and 3, and the second item of row one with
+   the second items of rows 2 and 3, etc.
+   ((1 2 3 10 11 12 19 20 21)
+    (4 5 6 13 14 15 22 23 24)
+    (7 8 9 16 17 18 25 26 27)
+    (28 29 30 37 38 39 46 47 48)
+    (31 32 33 40 41 42 49 50 51)
+    (34 35 36 43 44 45 52 53 54))"
   [pixel-vector width height square-width square-height]
-  (let [rs (rows width pixel-vector)
-        row-groups (partition square-height
-                              (map (partial partition square-width)
-                                   rs))]
+  (let [rows (into-rows pixel-vector width)
+        row-groups (->> rows
+                        (map (partial partition square-width))
+                        (partition square-height))]
 
+    ;; `apply` is used here
+    ;; to make use of the variadic
+    ;; nature of `map`
     (mapcat #(apply map concat %)
             row-groups)))
 
@@ -139,8 +176,8 @@
         height (.-height image)
         square-width 10
         square-height 10
-        sqrs (squares pixel-vector width height square-width square-height)
-        square-averages (map average-pixel-group sqrs)
+        squares (into-squares pixel-vector width height square-width square-height)
+        square-averages (map average-pixel-group squares)
         square-centers (square-center-coordinates width height square-width square-height)
         pixels-with-locations (partition 2 (interleave square-averages square-centers))]
 
@@ -160,7 +197,7 @@
         ;; this radius value has an incredible effect
         ;; on the quality of the resulting drawing
         ;; TODO: look into have to better the radius
-        (let [r (/ (radius (:brightness pixel) 300 40)
+        (let [r (/ (radius (:brightness pixel) 400 40)
                    2)]
           (q/ellipse x y r r))))))
 
