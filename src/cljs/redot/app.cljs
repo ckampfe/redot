@@ -15,9 +15,6 @@
         (/ brightness sample-size))
      max-radius))
 
-(defn into-rows [pixel-vector width]
-  (partition width pixel-vector))
-
 (defn into-squares
   "assuming width of 9, height of 6,
    square-width of 3, and square-height of 3,
@@ -65,8 +62,8 @@
     (31 32 33 40 41 42 49 50 51)
     (34 35 36 43 44 45 52 53 54))"
   [pixel-vector width height square-width square-height]
-  (let [rows (into-rows pixel-vector width)
-        row-groups (->> rows
+  (let [row-groups (->> pixel-vector
+                        (partition width)
                         (map (partial partition square-width))
                         (partition square-height))]
 
