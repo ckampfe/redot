@@ -1,6 +1,8 @@
 (ns redot.drawing
   (:require [quil.core :as q :include-macros true]))
 
+(def host "redot")
+
 (defn get-element! [el-id]
   (.getElementById js/document el-id))
 
@@ -167,7 +169,9 @@
   and return its data"
   [image-element-name]
   (let [image  (get-element! image-element-name)
-        canvas (create-canvas-element!)
+        ;; canvas (create-canvas-element!)
+        ;; context (get-canvas-context! canvas)
+        canvas (get-element! "redot")
         context (get-canvas-context! canvas)]
 
     ;; construct the canvas
@@ -185,28 +189,25 @@
                        (.-height image)) ;; full height
         .-data)))
 
-(defn init
-  "for now, this is the main entrypoint"
-  []
-  (let [image-data (get-image-data-from-element! "trmp")
+(defn load-app-db []
+  @re-frame.db/app-db)
+
+(defn draw []
+  (let [db (load-app-db)
+        image-data (get-image-data-from-element! "input-image")
         pixel-vector (bytes->pixels image-data)
-        image (get-element! "trmp")
+        image (get-element! "input-image")
         width (.-width image)
         height (.-height image)
-        square-width 10
-        square-height 10
+        square-width (int (-> db :square :width))
+        square-height (int (-> db :square :height))
         squares (into-squares pixel-vector width height square-width square-height)
         square-averages (map average-pixel-group squares)
         square-centers (square-center-coordinates width height square-width square-height)
         pixels-with-locations (partition 2 (interleave square-averages square-centers))]
 
-    (.log js/console width)
-    (.log js/console height)
-
-    ;; these still throw typeerrors in the console,
-    ;; not sure why
     (q/background 255)
-    (q/no-stroke)
+    (.log js/console "Cleared canvas")
 
     (doseq [[pixel [x y]] pixels-with-locations]
       (q/with-fill [(:r pixel)
@@ -216,13 +217,25 @@
         ;; this radius value has an incredible effect
         ;; on the quality of the resulting drawing
         ;; TODO: look into have to better the radius
-        (let [r (/ (radius (:brightness pixel) 400 30)
+        (let [r (/ (radius (:brightness pixel) 400 (-> db :dot-size-slider :value))
                    2)]
           (q/ellipse x y r r))))))
 
-(q/defsketch redot
-  :title "redot"
-  :host "redot"
-  :size [250 250]
-  :setup init)
 
+(defn setup []
+  (q/background 255)
+  (q/no-stroke)
+  (q/no-loop))
+
+(defn redraw []
+  (q/with-sketch (q/get-sketch-by-id host)
+    (q/redraw)
+    (.log js/console "Redrew canvas")))
+
+(defn do-sketch []
+  (q/defsketch redot
+    :title "redot"
+    :host host
+    :size [250 250]
+    :setup setup
+    :draw draw))
