@@ -95,6 +95,10 @@
         (update :b + (:b that))
         (update :a + (:a that)))))
 
+#_(defn print-canvas []
+  (let [data-url (.toDataURL (get-element! "redot"))
+        ]))
+
 (defn average-pixel-group
   "for every pixel in square, sum the pixels
   by their channels, and then divide by the number
@@ -201,5 +205,7 @@
 (q/defsketch redot
   :title "redot"
   :host "redot"
-  :size [260 250]
+  :size [250 250]
   :setup init)
+
+#_(defn -main [& args])
